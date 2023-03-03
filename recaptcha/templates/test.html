@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en-US">
+ 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Today's Date</title>
+    <script src="https://www.google.com/recaptcha/api.js?render=6Le-2MMkAAAAABE3B3raBxro1RTn_8uQI1iNB5mU"></script>
+    <script>
+        grecaptcha.ready(function() {
+        // do request for recaptcha token
+        // response is promise with passed token
+            grecaptcha.execute('6Le-2MMkAAAAABE3B3raBxro1RTn_8uQI1iNB5mU', {action:'validate_captcha'})
+                    .then(function(token) {
+                // add token value to form
+                document.getElementById('token').textContent = token;
+                console.log(token)
+            });
+        });
+</script>
+</head>
+ 
+<body>
+    <h5 id="token"></h5>
+</body>
+ 
+</html>
