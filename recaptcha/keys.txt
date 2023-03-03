@@ -1,6 +1,0 @@
-### Secrets ###
-API: 6Le-2MMkAAAAABE3B3raBxro1RTn_8uQI1iNB5mU
-SECRET: 6Le-2MMkAAAAALofmcnS8hQgpf1zViHV1M7C2iVu
-
-### Run server locally ###
-python3 -m http.server
