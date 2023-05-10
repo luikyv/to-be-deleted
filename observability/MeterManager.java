@@ -1,16 +1,32 @@
 package observability;
 
-import io.micrometer.core.instrument.Clock;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.*;
 import io.micrometer.jmx.JmxConfig;
 import io.micrometer.jmx.JmxMeterRegistry;
 
+import javax.management.*;
+import java.lang.management.ManagementFactory;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-public class MeterManager {
+public class MeterManager implements MeterManagerMBean {
+
+    static {
+        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+        try {
+            server.registerMBean(new MeterManager(), new ObjectName("amc:name=meter_manager"));
+        } catch (
+                MalformedObjectNameException |
+                InstanceAlreadyExistsException |
+                MBeanRegistrationException |
+                NotCompliantMBeanException e
+        ) {
+            // TODO: Log the exception
+        }
+    }
 
     private static final MeterRegistry registry = new JmxMeterRegistry(new JmxConfig() {
         @Override
@@ -29,7 +45,7 @@ public class MeterManager {
     private static HashMap<String, Timer> timeMapper = new HashMap<>();
 
     // Constants
-    private static final String METER_TEMPLATE = "%s_%s_%s";
+    private static final String METER_TEMPLATE = "%s.%s.%s";
     private static final Integer TIME_TO_EXPIRATION_MINUTES = 30;
 
     public static Counter getCounter(String meterName, String business, String brand) {
@@ -63,5 +79,22 @@ public class MeterManager {
         }
 
         return timeMapper.get(timerKey);
+    }
+
+    @Override
+    public Map<String, Double> getCustomMetrics() {
+        Map<String, Double> map = new HashMap<>();
+
+        Map<String, Double> countMap = counterMapper.entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().count())
+        );
+        map.putAll(countMap);
+
+        Map<String, Double> timeMap = timeMapper.entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().mean(TimeUnit.MILLISECONDS))
+        );
+        map.putAll(timeMap);
+
+        return map;
     }
 }
